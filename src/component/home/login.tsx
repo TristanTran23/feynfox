@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -9,10 +9,79 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  signInUserWithToken,
+  userExists,
+  updateUser,
+  insertNewUser,
+} from "../../../utils/auth";
+import { Session } from '@supabase/supabase-js';
+import { useUserStore } from 'state/stores/userStore';
 
 const LoginPage = () => {
+  const [errorText, setErrorText] = useState("");
+  const setUser = useUserStore((state) => state.setUser);
+
   const handleGoogleLogin = () => {
     console.log('Google login attempted');
+  };
+
+  const checkAndUpdateUser = async (session: Session) => {
+    let checkUser: any;
+    console.log("Checking and updating user...");
+    try {
+      console.log(session.user.id);
+      const { user, error } = await userExists(session.user.id);
+
+      if (error) {
+        console.error("Error checking user:", error.message);
+        setErrorText("Error checking user: " + error.message);
+        return;
+      }
+
+      checkUser = user;
+
+      console.log("Fetched user:", user);
+
+      if (!user) {
+        console.log("User not found, inserting new user...");
+
+        const { data, error: insertError } = await insertNewUser(session);
+
+        if (insertError) {
+          console.error("Error adding user:", insertError.message);
+          setErrorText("Error adding user: " + insertError.message);
+          return;
+        }
+
+        checkUser = data;
+        console.log("Inserted new user:", user);
+      } else {
+        console.log("User found, updating user...");
+        const { user: updatedUser, error: updateError } =
+          await updateUser(session);
+
+        if (updateError) {
+          console.error("Error updating user:", updateError.message);
+          setErrorText("Error updating user: " + updateError.message);
+          return;
+        }
+        checkUser = updatedUser?.length ? updatedUser[0] : null;
+        console.log("Updated user:", checkUser);
+      }
+
+      if (!checkUser) {
+        console.error("User is null after database operations.");
+        setErrorText("User is null after database operations.");
+        return;
+      }
+
+      console.log("User data set in store:", checkUser);
+      setUser(checkUser);
+    } catch (error: any) {
+      console.error("Unexpected error:", error);
+      setErrorText("Unexpected error: " + error.message);
+    }
   };
 
   return (
