@@ -1,12 +1,17 @@
-import LoginPage from "./component/home/login";
-import React from 'react';
-import TopBar from "./component/topbar/bar";
+import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import ProfileHome from './component/profile/profileHome'
+import VoiceRecorder from './component/talking/talking'
 
-export default function App() {
+const App = () => {
   return (
-    <div className="max-h-screen overflow-hidden">
-      <TopBar/>
-      <LoginPage/>
-    </div>
-  );
+    <Router>
+      <Routes>
+        <Route path="/" element={<VoiceRecorder />} />
+        <Route path="/profile" element={<ProfileHome />} />
+      </Routes>
+    </Router>
+  )
 }
+
+export default App
