@@ -1,5 +1,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import ProfileHome from './component/profile/profileHome'
 import VoiceRecorder from './component/talking/talking'
 
 const App = () => {
@@ -7,6 +8,7 @@ const App = () => {
     <Router>
       <Routes>
         <Route path="/" element={<VoiceRecorder />} />
+        <Route path="/profile" element={<ProfileHome />} />
       </Routes>
     </Router>
   )
