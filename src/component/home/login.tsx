@@ -10,8 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-
-
 const LoginPage = () => {
   const handleGoogleLogin = () => {
     console.log('Google login attempted');
