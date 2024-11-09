@@ -1,3 +1,4 @@
+import 'regenerator-runtime'
 import React, { useState } from 'react'
 import { Mic, RefreshCw, Check } from 'lucide-react'
 import {
@@ -11,6 +12,9 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from 'react-speech-recognition'
 
 const INITIAL_TOPICS = [
   {
@@ -34,17 +38,28 @@ const Talking = () => {
   const [topics, setTopics] = useState(INITIAL_TOPICS)
 
   const currentTopic = topics.find((topic) => topic.id === confirmedTopic)
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+  } = useSpeechRecognition()
 
+  if (!browserSupportsSpeechRecognition) {
+    return <span>Browser doesn't support speech recognition.</span>
+  }
   const startRecording = () => {
     if (!confirmedTopic) {
       alert('Please confirm your topic first')
       return
     }
     setIsRecording(true)
+    SpeechRecognition.startListening()
   }
 
   const stopRecording = () => {
     setIsRecording(false)
+    SpeechRecognition.stopListening()
   }
 
   const regenerateTopics = () => {
@@ -185,11 +200,7 @@ const Talking = () => {
                     />
                     <div className="relative bg-white rounded-xl p-4">
                       <p className="text-lg sm:text-xl font-medium text-gray-800">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-                        sed do eiusmod tempor incididunt ut labore et dolore
-                        magna aliqua. Ut enim ad minim veniam, quis nostrud
-                        exercitation ullamco laboris nisi ut aliquip ex ea
-                        commodo consequat.
+                        {transcript}
                       </p>
                     </div>
                   </div>
