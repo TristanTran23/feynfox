@@ -1,4 +1,44 @@
-import React, { useState } from 'react';
+// First, let's add the type definitions for the Google API
+interface CredentialResponse {
+  credential: string;
+  select_by: string;
+  // Add other properties as needed
+}
+
+interface Google {
+  accounts: {
+    id: {
+      initialize: (config: {
+        client_id: string;
+        callback: (response: CredentialResponse) => void;
+      }) => void;
+      prompt: (callback: (notification: {
+        isNotDisplayed: () => boolean;
+        getNotDisplayedReason: () => string;
+        isSkippedMoment: () => boolean;
+        getSkippedReason: () => string;
+        isDismissedMoment: () => boolean;
+        getDismissedReason: () => string;
+      }) => void) => void;
+      renderButton: (
+        element: HTMLElement,
+        options: {
+          theme?: string;
+          size?: string;
+        }
+      ) => void;
+    };
+  };
+}
+
+// Extend the Window interface
+declare global {
+  interface Window {
+    google?: Google;
+  }
+}
+
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -17,13 +57,79 @@ import {
 } from "../../../utils/auth";
 import { Session } from '@supabase/supabase-js';
 import { useUserStore } from 'state/stores/userStore';
+import { User } from 'types/user.types';
 
 const LoginPage = () => {
   const [errorText, setErrorText] = useState("");
   const setUser = useUserStore((state) => state.setUser);
 
+  useEffect(() => {
+    // Load Google Sign-In script
+    const loadGoogleScript = () => {
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+
+      return () => {
+        document.body.removeChild(script);
+      };
+    };
+
+    const cleanup = loadGoogleScript();
+    return cleanup;
+  }, []);
+
+  useEffect(() => {
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
+        callback: handleCredentialResponse,
+      });
+    }
+  }, []);
+
+  const handleCredentialResponse = async (response: CredentialResponse) => {
+    try {
+      // Here you would typically send the credential to your backend
+      const { data: user, error } = await signInUserWithToken(response.credential);
+      
+      if (error) {
+        console.error("Error signing in:", error.message);
+        setErrorText("Error signing in: " + error.message);
+        return;
+      }
+
+      if (user.session) {
+        await checkAndUpdateUser(user.session);
+      }
+    } catch (error: any) {
+      console.error("Unexpected error during sign-in:", error);
+      setErrorText("Unexpected error during sign-in: " + error.message);
+    }
+  };
+
   const handleGoogleLogin = () => {
-    console.log('Google login attempted');
+    if (window.google?.accounts?.id) {
+      try {
+        window.google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed()) {
+            console.error("Google Sign-In prompt not displayed:", notification.getNotDisplayedReason());
+          } else if (notification.isSkippedMoment()) {
+            console.log("User skipped sign-in prompt:", notification.getSkippedReason());
+          } else if (notification.isDismissedMoment()) {
+            console.log("User dismissed sign-in prompt:", notification.getDismissedReason());
+          }
+        });
+      } catch (error) {
+        console.error("Error prompting Google Sign-In:", error);
+        setErrorText("Error initiating Google Sign-In");
+      }
+    } else {
+      console.error("Google Sign-In not initialized");
+      setErrorText("Google Sign-In not available");
+    }
   };
 
   const checkAndUpdateUser = async (session: Session) => {
@@ -108,6 +214,11 @@ const LoginPage = () => {
           </CardHeader>
           
           <CardContent className="space-y-6">
+            {errorText && (
+              <div className="text-red-600 text-center text-sm">
+                {errorText}
+              </div>
+            )}
             <Button 
               onClick={handleGoogleLogin}
               variant="outline"
