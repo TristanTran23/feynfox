@@ -1,4 +1,26 @@
-import React, { useState } from 'react';
+// Type definitions
+interface CredentialResponse {
+  credential: string;
+  select_by: string;
+}
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string;
+            callback: (response: CredentialResponse) => void;
+          }) => void;
+          prompt: () => void;
+        };
+      };
+    };
+  }
+}
+
+import React, { useEffect, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -8,18 +30,48 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Session } from '@supabase/supabase-js';
 import {
   userExists,
   updateUser,
   insertNewUser,
+  signInUserWithToken,
+  checkAndUpdateUser,
 } from "../../../utils/auth";
 import { useUserStore } from '../../../state/stores/userStore';
-import { supabase } from 'utils/supabase';
+import { supabase } from '../../../utils/supabase';
 
 const LoginPage = () => {
   const [errorText, setErrorText] = useState("");
+
+  useEffect(() => {
+    // This effect can be removed if you're fully migrating to Supabase OAuth
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.initialize({
+        client_id: "485960529327-k3j9cibtkq0coomhphrd4bcn9ie49nac.apps.googleusercontent.com",
+        callback: handleCredentialResponse,
+      });
+    }
+  }, []);
+
+  const handleCredentialResponse = async (response: CredentialResponse) => {
+    try {
+      const { data: user, error } = await signInUserWithToken(response.credential);
+      
+      if (error) {
+        console.error("Error signing in:", error.message);
+        setErrorText("Error signing in: " + error.message);
+        return;
+      }
+
+      if (user.session) {
+        await checkAndUpdateUser(user.session);
+      }
+    } catch (error: any) {
+      console.error("Unexpected error during sign-in:", error);
+      setErrorText("Unexpected error during sign-in: " + error.message);
+    }
+  };
 
   const handleGoogleLogin = async () => {
     try {
@@ -37,9 +89,6 @@ const LoginPage = () => {
       if (error) {
         throw error;
       }
-
-      // The checkAndUpdateUser logic will be handled in your callback page
-      // after successful authentication
       
     } catch (error: any) {
       console.error("Error initiating Google Sign-In:", error);
@@ -79,7 +128,6 @@ const LoginPage = () => {
               variant="outline"
               className="w-full h-12 text-base bg-[#FA5803] hover:bg-[#FF8B4E]"
               type="button"
-
             >
               <div className="flex items-center justify-center space-x-3">
                 <svg 
@@ -98,7 +146,6 @@ const LoginPage = () => {
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-4">
-
             <div className="text-center text-sm text-gray-600">
               <p>By continuing, you agree to our</p>
               <div className="space-x-2 mt-1">

@@ -4,13 +4,11 @@ import {
   userExists,
   updateUser,
   insertNewUser,
-} from 'utils/auth';
-import { supabase } from 'utils/supabase';
-import { useUserStore } from 'state/stores/userStore';
-import { useRouter } from 'next/navigation';
+} from '../../../utils/auth';
+import { supabase } from '../../../utils/supabase';
+import { useUserStore } from '../../../state/stores/userStore';
 
 const AuthCallback = () => {
-  const router = useRouter()
 
   useEffect(() => {
     const checkAndUpdateUser = async (session: Session | null) => {
@@ -58,7 +56,7 @@ const AuthCallback = () => {
         }
 
         useUserStore.getState().setUser(checkUser);
-        router.push('/dashboard'); // or wherever you want to redirect after login
+        window.location.href = '/dashboard'; // or wherever you want to redirect after login
       } catch (error: any) {
         console.error("Unexpected error:", error);
       }
@@ -67,7 +65,8 @@ const AuthCallback = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       checkAndUpdateUser(session);
     });
-  }, [router]);
+    window.location.href = '/dashboard'; // or wherever you want to redirect after login
+  }, []);
 
   return (
     <div>Loading...</div>
