@@ -1,8 +1,6 @@
-import { Plus } from 'lucide-react'
 import React, { useState } from 'react'
-
 import { Button } from '@/components/ui/button'
-
+import { Plus } from 'lucide-react'
 import SingleFile from '../singleFile/singleFile'
 
 const ProfileHome: React.FC = () => {
@@ -17,9 +15,9 @@ const ProfileHome: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold">Your Profile</h2>
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-6 bg-emerald-50 min-h-screen">
+      <h2 className="text-2xl font-bold text-center">Your Profile</h2>
+      <div className="items-center justify-between mb-6">
         <Button onClick={addNewFile} className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
           Add New File
