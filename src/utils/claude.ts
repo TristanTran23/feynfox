@@ -66,14 +66,14 @@ export const generateTopics = async () => {
       max_tokens: 4000,
       temperature: 0,
       system:
-        'Generate a concise list of topics based on the provided content. Only return the topics, no additional explanation or details.',
+        'Generate a concise list of topics based on the provided content. Return the topics as a JSON array of strings. Do not include any additional text or explanation.',
       messages: [
         {
           role: 'user',
           content: [
             {
               type: 'text',
-              text: `Using the following content, create a list of at most 10 topics and only give me the topics:\n${promptContent}`,
+              text: `Using the following content, create a list of at most 10 topics and return them as a JSON array:\n${promptContent}`,
             },
           ],
         },

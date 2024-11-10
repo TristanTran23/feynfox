@@ -20,7 +20,7 @@ const TestingFile: React.FC = () => {
   const handleGenerateTopics = async () => {
     try {
       const result = await generateTopics() // Assuming this function will log internally
-      setTopicsResponse(JSON.stringify(result, null, 2)) // Update state with response for display
+      setTopicsResponse(JSON.parse(result)) // Update state with response for display
     } catch (error) {
       console.error('Error generating topics:', error)
     }
