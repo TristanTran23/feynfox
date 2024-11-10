@@ -1,5 +1,5 @@
 import 'regenerator-runtime'
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Mic, RefreshCw, Check } from 'lucide-react'
 import {
   Table,
@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import SpeechRecognition, {
   useSpeechRecognition,
 } from 'react-speech-recognition'
+import axios from 'axios' // Ensure axios is installed: npm install axios
 
 const INITIAL_TOPICS = [
   {
@@ -36,6 +37,10 @@ const Talking = () => {
   const [selectedTopic, setSelectedTopic] = useState('')
   const [confirmedTopic, setConfirmedTopic] = useState('')
   const [topics, setTopics] = useState(INITIAL_TOPICS)
+  const [editableTranscript, setEditableTranscript] = useState('')
+  const [prevTranscript, setPrevTranscript] = useState('')
+  const [audioUrl, setAudioUrl] = useState(null) // Holds the URL of the audio file
+  const audioRef = useRef(null) // Ref for the audio player
 
   const currentTopic = topics.find((topic) => topic.id === confirmedTopic)
   const {
@@ -45,16 +50,37 @@ const Talking = () => {
     browserSupportsSpeechRecognition,
   } = useSpeechRecognition()
 
+  useEffect(() => {
+    if (isRecording) {
+      const newText = transcript.replace(prevTranscript, '')
+      setEditableTranscript(
+        (prevEditableTranscript) => prevEditableTranscript + newText,
+      )
+      setPrevTranscript(transcript)
+    }
+  }, [transcript, isRecording, prevTranscript])
+
+  useEffect(() => {
+    if (audioUrl) {
+      const audio = new Audio(audioUrl)
+      audio.play()
+    }
+  }, [audioUrl])
+
   if (!browserSupportsSpeechRecognition) {
     return <span>Browser doesn't support speech recognition.</span>
   }
+
   const startRecording = () => {
     if (!confirmedTopic) {
       alert('Please confirm your topic first')
       return
     }
     setIsRecording(true)
-    SpeechRecognition.startListening()
+    resetTranscript()
+    setEditableTranscript('')
+    setPrevTranscript('')
+    SpeechRecognition.startListening({ continuous: true })
   }
 
   const stopRecording = () => {
@@ -62,10 +88,49 @@ const Talking = () => {
     SpeechRecognition.stopListening()
   }
 
+  // Function to send the transcript to ElevenLabs and get the audio
+  const handleSubmit = async () => {
+    if (!editableTranscript.trim()) {
+      alert('Transcription is empty.')
+      return
+    }
+
+    try {
+      const apiKey = 'YOUR_ELEVENLABS_API_KEY' // Replace with your actual API key
+      const voiceId = 'YOUR_VOICE_ID' // Replace with your desired voice ID
+
+      const response = await axios.post(
+        `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+        { text: editableTranscript },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'xi-api-key': apiKey,
+          },
+          responseType: 'blob', // Important to get the binary data
+        },
+      )
+
+      // Create a URL for the audio blob
+      const audioBlob = new Blob([response.data], { type: 'audio/mpeg' })
+      const url = URL.createObjectURL(audioBlob)
+      setAudioUrl(url)
+    } catch (error) {
+      console.error('Error sending transcript to ElevenLabs:', error)
+      alert('Failed to generate audio from ElevenLabs.')
+    }
+  }
+
   const regenerateTopics = () => {
     setTopics([...topics].sort(() => Math.random() - 0.5))
     setSelectedTopic('')
     setConfirmedTopic('')
+    resetTranscript()
+    setEditableTranscript('')
+    setPrevTranscript('')
+    setIsRecording(false)
+    SpeechRecognition.stopListening()
+    setAudioUrl(null)
   }
 
   const confirmTopic = () => {
@@ -79,6 +144,12 @@ const Talking = () => {
   const resetSelection = () => {
     setConfirmedTopic('')
     setSelectedTopic('')
+    setEditableTranscript('')
+    setPrevTranscript('')
+    setIsRecording(false)
+    resetTranscript()
+    SpeechRecognition.stopListening()
+    setAudioUrl(null)
   }
 
   return (
@@ -200,61 +271,78 @@ const Talking = () => {
                     />
                     <div className="relative bg-white rounded-xl p-4">
                       <p className="text-lg sm:text-xl font-medium text-gray-800">
-                        {transcript}
+                        {editableTranscript ||
+                          'Your transcription will appear here.'}
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
+
+              {/* Textbox and Submit Button */}
+              {(isRecording || editableTranscript.trim() !== '') && (
+                <div className="w-full max-w-3xl mb-6">
+                  <textarea
+                    value={editableTranscript}
+                    onChange={(e) => setEditableTranscript(e.target.value)}
+                    className="w-full h-40 p-2 border rounded"
+                    placeholder="Your transcription..."
+                  ></textarea>
+                  <Button onClick={handleSubmit} className="mt-2">
+                    Submit
+                  </Button>
+                </div>
+              )}
             </>
           )}
         </div>
 
-        <div className="relative">
-          <div
-            className={`
-              w-32 h-32 sm:w-48 sm:h-48 rounded-full 
-              ${isRecording ? 'bg-emerald-400' : 'bg-emerald-200'} 
-              flex items-center justify-center
-              transition-all duration-300
-              ${isRecording ? 'animate-pulse shadow-lg shadow-emerald-300' : ''}
-            `}
-          >
-            <div
-              className={`
-                w-24 h-24 sm:w-40 sm:h-40 rounded-full 
-                ${isRecording ? 'bg-emerald-300' : 'bg-emerald-100'}
-                flex items-center justify-center
-                transition-all duration-300
-              `}
-            >
-              <Mic
-                className={`w-12 h-12 sm:w-16 sm:h-16 ${
-                  isRecording ? 'text-white animate-pulse' : 'text-emerald-600'
-                }`}
-              />
+        {/* Hide mic icon and Start Recording button when there is text in the transcript */}
+        {!isRecording && editableTranscript.trim() === '' && (
+          <>
+            <div className="relative">
+              <div
+                className={`
+                  w-32 h-32 sm:w-48 sm:h-48 rounded-full 
+                  bg-emerald-200 
+                  flex items-center justify-center
+                  transition-all duration-300
+                `}
+              >
+                <div
+                  className={`
+                    w-24 h-24 sm:w-40 sm:h-40 rounded-full 
+                    bg-emerald-100
+                    flex items-center justify-center
+                    transition-all duration-300
+                  `}
+                >
+                  <Mic
+                    className={`w-12 h-12 sm:w-16 sm:h-16 text-emerald-600`}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+
+            <Button
+              onClick={startRecording}
+              size="lg"
+              className="bg-emerald-600 hover:bg-emerald-700 mt-4"
+              disabled={!confirmedTopic}
+            >
+              Start Recording
+            </Button>
+          </>
+        )}
 
         {isRecording && (
           <Button
             onClick={stopRecording}
             size="lg"
-            className="bg-gray-500 hover:bg-gray-700"
+            className="bg-gray-500 hover:bg-gray-700 mt-4"
             disabled={!confirmedTopic}
           >
-            Cancel
-          </Button>
-        )}
-        {!isRecording && (
-          <Button
-            onClick={startRecording}
-            size="lg"
-            className="bg-emerald-600 hover:bg-emerald-700"
-            disabled={!confirmedTopic}
-          >
-            Start Recording
+            Stop Recording
           </Button>
         )}
       </div>
