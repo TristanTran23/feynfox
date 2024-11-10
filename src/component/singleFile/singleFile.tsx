@@ -60,7 +60,8 @@ const SingleFile: React.FC<SingleFileProps> = ({ onDelete }) => {
             <Button
               variant="outline"
               className="flex items-center gap-2 w-32"
-              disabled={!file}>
+              disabled={!file}
+              onClick={() => (window.location.href = '/learning-page')}>
               <BookOpen className="w-4 h-4" />
               Start Learning
             </Button>
