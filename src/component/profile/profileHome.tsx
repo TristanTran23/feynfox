@@ -17,20 +17,18 @@ const ProfileHome: React.FC = () => {
   }
 
   return (
-    <div className="w-full p-6">
-      <div className="flex items-center justify-between mb-6 w-full">
-        <h2 className="text-2xl font-bold">Your Profile</h2>
+    <div className="p-6">
+      <h2 className="text-2xl font-bold">Your Profile</h2>
+      <div className="flex items-center justify-between mb-6">
         <Button onClick={addNewFile} className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
           Add New File
         </Button>
       </div>
 
-      <div className="w-full">
-        {files.map((fileId, index) => (
-          <SingleFile key={fileId} onDelete={() => deleteFile(index)} />
-        ))}
-      </div>
+      {files.map((fileId, index) => (
+        <SingleFile key={fileId} onDelete={() => deleteFile(index)} />
+      ))}
 
       {files.length === 0 && (
         <p className="text-center text-gray-500 mt-8">

@@ -36,28 +36,30 @@ const SingleFile: React.FC<SingleFileProps> = ({ onDelete }) => {
   }
 
   return (
-    <Card className="mb-4 w-full">
-      <CardContent className="pt-6 w-full">
-        <div className="flex flex-col gap-4 w-full">
-          <input
-            type="file"
-            ref={fileInputRef}
-            accept=".pdf"
-            onChange={handleFileChange}
-            className="hidden"
-          />
+    <Card className="mb-4">
+      <CardContent className="pt-6">
+        <div className="flex justify-between items-start">
+          <div className="w-64">
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept=".pdf"
+              onChange={handleFileChange}
+              className="hidden"
+            />
 
-          <Button
-            onClick={handleFileClick}
-            className="flex items-center gap-2 w-full justify-center">
-            {!file && <Upload className="w-4 h-4" />}
-            {fileName}
-          </Button>
+            <Button
+              onClick={handleFileClick}
+              className="flex items-center gap-2 w-full justify-center">
+              {!file && <Upload className="w-4 h-4" />}
+              {fileName}
+            </Button>
+          </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2">
             <Button
               variant="outline"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 w-32"
               disabled={!file}>
               <BookOpen className="w-4 h-4" />
               Start Learning
@@ -65,7 +67,7 @@ const SingleFile: React.FC<SingleFileProps> = ({ onDelete }) => {
             <Button
               variant="destructive"
               onClick={onDelete}
-              className="flex items-center gap-2">
+              className="flex items-center gap-2 w-32">
               <Trash2 className="w-4 h-4" />
               Delete
             </Button>
