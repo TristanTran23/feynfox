@@ -17,6 +17,25 @@ import SpeechRecognition, {
 } from 'react-speech-recognition'
 import axios from 'axios' // Ensure axios is installed: npm install axios
 
+// Define the image paths
+const fox = {
+  curious: [
+    '/assets/curious/1.png',
+    '/assets/curious/2.png',
+    '/assets/curious/3.png',
+  ],
+  excited: [
+    '/assets/excited/1.png',
+    '/assets/excited/2.png',
+    '/assets/excited/3.png',
+  ],
+  talking: [
+    '/assets/talking/1.png',
+    '/assets/talking/2.png',
+    '/assets/talking/3.png',
+  ],
+}
+
 const INITIAL_TOPICS = [
   {
     id: '1',
@@ -39,7 +58,8 @@ const Talking = () => {
   const [topics, setTopics] = useState(INITIAL_TOPICS)
   const [editableTranscript, setEditableTranscript] = useState('')
   const [prevTranscript, setPrevTranscript] = useState('')
-  const [audioUrl, setAudioUrl] = useState('') // Holds the URL of the audio file
+  const [audioUrl, setAudioUrl] = useState('')
+  const [currentImage, setCurrentImage] = useState('/assets/fox1.png')
 
   const currentTopic = topics.find((topic) => topic.id === confirmedTopic)
   const {
@@ -66,6 +86,21 @@ const Talking = () => {
     }
   }, [audioUrl])
 
+  useEffect(() => {
+    let imagesToUse = []
+
+    if (isRecording) {
+      imagesToUse = fox.talking
+    } else {
+      imagesToUse = [...fox.excited, ...fox.curious]
+    }
+
+    if (imagesToUse.length > 0) {
+      const randomIndex = Math.floor(Math.random() * imagesToUse.length)
+      setCurrentImage(imagesToUse[randomIndex])
+    }
+  }, [isRecording])
+
   if (!browserSupportsSpeechRecognition) {
     return <span>Browser doesn't support speech recognition.</span>
   }
@@ -87,7 +122,6 @@ const Talking = () => {
     SpeechRecognition.stopListening()
   }
 
-  // Function to send the transcript to ElevenLabs and get the audio
   const handleSubmit = async () => {
     if (!editableTranscript.trim()) {
       alert('Transcription is empty.')
@@ -110,7 +144,6 @@ const Talking = () => {
         },
       )
 
-      // Create a URL for the audio blob
       const audioBlob = new Blob([response.data], { type: 'audio/mpeg' })
       const url = URL.createObjectURL(audioBlob)
       setAudioUrl(url)
@@ -160,7 +193,7 @@ const Talking = () => {
     setPrevTranscript('')
     setIsRecording(false)
     SpeechRecognition.stopListening()
-    setAudioUrl(null)
+    setAudioUrl('')
   }
 
   const confirmTopic = async () => {
@@ -183,7 +216,7 @@ const Talking = () => {
     setIsRecording(false)
     resetTranscript()
     SpeechRecognition.stopListening()
-    setAudioUrl(null)
+    setAudioUrl('')
   }
 
   return (
@@ -292,7 +325,7 @@ const Talking = () => {
                 <div className="absolute inset-0 flex justify-center items-center">
                   <div className="relative h-full w-[256px] flex items-center justify-center">
                     <img
-                      src="/assets/fox1.png"
+                      src={currentImage}
                       alt="Character"
                       className="h-[256px] w-[256px] object-contain mb-auto"
                     />
