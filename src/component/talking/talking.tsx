@@ -17,6 +17,14 @@ import SpeechRecognition, {
 } from 'react-speech-recognition'
 import axios from 'axios' // Ensure axios is installed: npm install axios
 
+interface ImportMetaEnv {
+  readonly VITE_OPENAI_API_KEY: string
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
+}
+
 // Define the image paths
 const fox = {
   curious: [
@@ -129,7 +137,7 @@ const Talking = () => {
     }
 
     try {
-      const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY
+      const apiKey = process.env.VITE_ELEVENLABS_API_KEY
       const voiceId = '9EE00wK5qV6tPtpQIxvy'
 
       const response = await axios.post(
@@ -156,7 +164,7 @@ const Talking = () => {
   // Function to generate greeting message using ElevenLabs
   const playGreeting = async (topicTitle: string) => {
     try {
-      const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY
+      const apiKey = process.env.VITE_ELEVENLABS_API_KEY
       const voiceId = '9EE00wK5qV6tPtpQIxvy'
 
       const greetingText = `Hey Iman, go ahead and tell me everything you know about ${topicTitle}!`
@@ -205,7 +213,7 @@ const Talking = () => {
     setConfirmedTopic(selectedTopic)
 
     // Play the greeting message
-    await playGreeting(topic.title)
+    if(topic) await playGreeting(topic.title)
   }
 
   const resetSelection = () => {

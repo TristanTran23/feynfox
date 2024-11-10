@@ -56,7 +56,7 @@ const AuthCallback = () => {
         }
 
         useUserStore.getState().setUser(checkUser);
-        window.location.href = '/dashboard'; // or wherever you want to redirect after login
+        window.location.href = '/profile'; // or wherever you want to redirect after login
       } catch (error: any) {
         console.error("Unexpected error:", error);
       }
@@ -65,7 +65,7 @@ const AuthCallback = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       checkAndUpdateUser(session);
     });
-    window.location.href = '/dashboard'; // or wherever you want to redirect after login
+    window.location.href = '/profile'; // or wherever you want to redirect after login
   }, []);
 
   return (

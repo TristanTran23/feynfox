@@ -58,7 +58,7 @@ const LoginPage = () => {
   useEffect(() => {
     if (window.google?.accounts?.id) {
       window.google.accounts.id.initialize({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
+        client_id: process.env.VITE_GOOGLE_CLIENT_ID || '',
         callback: handleCredentialResponse,
       })
     }
