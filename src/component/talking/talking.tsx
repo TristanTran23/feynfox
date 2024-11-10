@@ -1,5 +1,5 @@
 import 'regenerator-runtime'
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Mic, RefreshCw, Check } from 'lucide-react'
 import {
   Table,
@@ -39,8 +39,7 @@ const Talking = () => {
   const [topics, setTopics] = useState(INITIAL_TOPICS)
   const [editableTranscript, setEditableTranscript] = useState('')
   const [prevTranscript, setPrevTranscript] = useState('')
-  const [audioUrl, setAudioUrl] = useState(null) // Holds the URL of the audio file
-  const audioRef = useRef(null) // Ref for the audio player
+  const [audioUrl, setAudioUrl] = useState('') // Holds the URL of the audio file
 
   const currentTopic = topics.find((topic) => topic.id === confirmedTopic)
   const {
@@ -96,8 +95,8 @@ const Talking = () => {
     }
 
     try {
-      const apiKey = 'YOUR_ELEVENLABS_API_KEY' // Replace with your actual API key
-      const voiceId = 'YOUR_VOICE_ID' // Replace with your desired voice ID
+      const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY
+      const voiceId = '9EE00wK5qV6tPtpQIxvy'
 
       const response = await axios.post(
         `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
@@ -121,6 +120,37 @@ const Talking = () => {
     }
   }
 
+  // Function to generate greeting message using ElevenLabs
+  const playGreeting = async (topicTitle: string) => {
+    try {
+      const apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY
+      const voiceId = '9EE00wK5qV6tPtpQIxvy'
+
+      const greetingText = `Hey Iman, go ahead and tell me everything you know about ${topicTitle}!`
+
+      const response = await axios.post(
+        `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+        { text: greetingText },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'xi-api-key': apiKey,
+          },
+          responseType: 'blob', // Important to get the binary data
+        },
+      )
+
+      // Create a URL for the audio blob and play it
+      const audioBlob = new Blob([response.data], { type: 'audio/mpeg' })
+      const url = URL.createObjectURL(audioBlob)
+      const audio = new Audio(url)
+      audio.play()
+    } catch (error) {
+      console.error('Error generating greeting from ElevenLabs:', error)
+      alert('Failed to generate greeting audio from ElevenLabs.')
+    }
+  }
+
   const regenerateTopics = () => {
     setTopics([...topics].sort(() => Math.random() - 0.5))
     setSelectedTopic('')
@@ -133,12 +163,16 @@ const Talking = () => {
     setAudioUrl(null)
   }
 
-  const confirmTopic = () => {
+  const confirmTopic = async () => {
     if (!selectedTopic) {
       alert('Please select a topic first')
       return
     }
+    const topic = topics.find((t) => t.id === selectedTopic)
     setConfirmedTopic(selectedTopic)
+
+    // Play the greeting message
+    await playGreeting(topic.title)
   }
 
   const resetSelection = () => {
@@ -297,44 +331,38 @@ const Talking = () => {
           )}
         </div>
 
-        {/* Hide mic icon and Start Recording button when there is text in the transcript */}
+        {/* Mic Icon as Start Recording Button */}
         {!isRecording && editableTranscript.trim() === '' && (
-          <>
-            <div className="relative">
+          <div className="relative">
+            <div
+              onClick={confirmedTopic ? startRecording : null}
+              className={`
+                w-32 h-32 sm:w-48 sm:h-48 rounded-full 
+                bg-emerald-200 
+                flex items-center justify-center
+                transition-all duration-300
+                ${
+                  confirmedTopic
+                    ? 'cursor-pointer hover:bg-emerald-300'
+                    : 'cursor-not-allowed opacity-50'
+                }
+              `}
+            >
               <div
                 className={`
-                  w-32 h-32 sm:w-48 sm:h-48 rounded-full 
-                  bg-emerald-200 
+                  w-24 h-24 sm:w-40 sm:h-40 rounded-full 
+                  bg-emerald-100
                   flex items-center justify-center
                   transition-all duration-300
                 `}
               >
-                <div
-                  className={`
-                    w-24 h-24 sm:w-40 sm:h-40 rounded-full 
-                    bg-emerald-100
-                    flex items-center justify-center
-                    transition-all duration-300
-                  `}
-                >
-                  <Mic
-                    className={`w-12 h-12 sm:w-16 sm:h-16 text-emerald-600`}
-                  />
-                </div>
+                <Mic className={`w-12 h-12 sm:w-16 sm:h-16 text-emerald-600`} />
               </div>
             </div>
-
-            <Button
-              onClick={startRecording}
-              size="lg"
-              className="bg-emerald-600 hover:bg-emerald-700 mt-4"
-              disabled={!confirmedTopic}
-            >
-              Start Recording
-            </Button>
-          </>
+          </div>
         )}
 
+        {/* Stop Recording Button */}
         {isRecording && (
           <Button
             onClick={stopRecording}
