@@ -40,7 +40,7 @@ const SingleFile: React.FC<SingleFileProps> = ({ onDelete }) => {
 
     setIsEmbedding(true)
     try {
-      const result = await embedPdf(file, 'your-openai-key-here')
+      const result = await embedPdf(file, process.env.OPENAI_API_KEY || '')
       
       if (result.success) {
         alert('Document has been processed successfully!')

@@ -58,3 +58,16 @@ export const embedPdf = async (
     };
   }
 };
+export const insertNewEmbeddings = async () => {
+  const { data, error } = await supabase.from("embeddings").insert([
+    {
+      id: 1,
+      created_at: new Date(),
+      embedding: "test",
+    },
+    ])
+    .select("*")
+    .single();
+
+  return { data, error };
+};

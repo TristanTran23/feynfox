@@ -4,9 +4,9 @@ import {
   userExists,
   updateUser,
   insertNewUser,
-} from '../../../utils/auth';
-import { supabase } from '../../../utils/supabase';
+} from '../../utils/auth';
 import { useUserStore } from '../../../state/stores/userStore';
+import { supabase } from '@/utils/supabase';
 
 const AuthCallback = () => {
 
@@ -65,7 +65,7 @@ const AuthCallback = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       checkAndUpdateUser(session);
     });
-    window.location.href = '/dashboard'; // or wherever you want to redirect after login
+    window.location.href = '/profile'; // or wherever you want to redirect after login
   }, []);
 
   return (

@@ -1,6 +1,6 @@
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
-import { useUserStore } from "../state/stores/userStore";
+import { useUserStore } from "../../state/stores/userStore";
 
 export const insertNewUser = async (session: Session) => {
   const { data, error } = await supabase.from("users").insert([

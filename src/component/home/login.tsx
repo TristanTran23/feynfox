@@ -46,9 +46,9 @@ import {
   insertNewUser,
   signInUserWithToken,
   checkAndUpdateUser,
-} from "../../../utils/auth";
+} from "../../utils/auth";
 import { useUserStore } from '../../../state/stores/userStore';
-import { supabase } from '../../../utils/supabase';
+import { supabase } from '@/utils/supabase';
 
 const LoginPage = () => {
   const [errorText, setErrorText] = useState("");
