@@ -4,6 +4,15 @@ interface CredentialResponse {
   select_by: string;
 }
 
+interface ImportMetaEnv {
+  readonly VITE_GOOGLE_CLIENT_ID: string
+  // Add other env vars here if needed
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
+}
+
 declare global {
   interface Window {
     google?: {
@@ -48,7 +57,7 @@ const LoginPage = () => {
     // This effect can be removed if you're fully migrating to Supabase OAuth
     if (window.google?.accounts?.id) {
       window.google.accounts.id.initialize({
-        client_id: "485960529327-k3j9cibtkq0coomhphrd4bcn9ie49nac.apps.googleusercontent.com",
+        client_id: process.env.VITE_GOOGLE_CLIENT_ID || '',
         callback: handleCredentialResponse,
       });
     }
