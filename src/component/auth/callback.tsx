@@ -17,7 +17,7 @@ const AuthCallback = () => {
       }
       let checkUser: any;
       console.log("Checking and updating user...");
-      try {
+      try { 
         console.log(session.user.id);
         const { user, error } = await userExists(session.user.id);
 

@@ -1,0 +1,7 @@
+fastapi 
+uvicorn 
+python-multipart 
+langchain-openai 
+langchain-community 
+supabase 
+pypdf
