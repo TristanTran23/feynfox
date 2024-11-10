@@ -1,10 +1,30 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import { Session } from '@supabase/supabase-js'
+import {
+  userExists,
+  updateUser,
+  insertNewUser,
+  signInUserWithToken,
+  checkAndUpdateUser,
+} from '../../../utils/auth'
+import { useUserStore } from '../../../state/stores/userStore'
+import { supabase } from '../../../utils/supabase'
+
 // Type definitions
 interface CredentialResponse {
-  credential: string;
-  select_by: string;
+  credential: string
+  select_by: string
 }
 
 interface ImportMetaEnv {
@@ -22,73 +42,48 @@ declare global {
       accounts: {
         id: {
           initialize: (config: {
-            client_id: string;
-            callback: (response: CredentialResponse) => void;
-          }) => void;
-          prompt: () => void;
-        };
-      };
-    };
+            client_id: string
+            callback: (response: CredentialResponse) => void
+          }) => void
+          prompt: () => void
+        }
+      }
+    }
   }
 }
 
-import React, { useEffect, useState } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Session } from '@supabase/supabase-js';
-import {
-  userExists,
-  updateUser,
-  insertNewUser,
-  signInUserWithToken,
-  checkAndUpdateUser,
-} from "../../../utils/auth";
-import { useUserStore } from '../../../state/stores/userStore';
-import { supabase } from '../../../utils/supabase';
-
 const LoginPage = () => {
-  const handleGoogleLogin = () => {
-    console.log('Google login attempted')
-  }
-  const [errorText, setErrorText] = useState("");
+  const [errorText, setErrorText] = useState('')
 
   useEffect(() => {
-    // This effect can be removed if you're fully migrating to Supabase OAuth
     if (window.google?.accounts?.id) {
       window.google.accounts.id.initialize({
-        client_id: process.env.VITE_GOOGLE_CLIENT_ID || '',
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
         callback: handleCredentialResponse,
-      });
+      })
     }
-  }, []);
+  }, [])
 
   const handleCredentialResponse = async (response: CredentialResponse) => {
     try {
-      const { data: user, error } = await signInUserWithToken(response.credential);
-      
+      const { data: user, error } = await signInUserWithToken(
+        response.credential,
+      )
+
       if (error) {
-        console.error("Error signing in:", error.message);
-        setErrorText("Error signing in: " + error.message);
-        return;
+        console.error('Error signing in:', error.message)
+        setErrorText('Error signing in: ' + error.message)
+        return
       }
 
       if (user.session) {
-        await checkAndUpdateUser(user.session);
+        await checkAndUpdateUser(user.session)
       }
     } catch (error: any) {
-      console.error("Unexpected error during sign-in:", error);
-      setErrorText("Unexpected error during sign-in: " + error.message);
+      console.error('Unexpected error during sign-in:', error)
+      setErrorText('Unexpected error during sign-in: ' + error.message)
     }
-  };
+  }
 
   const handleGoogleLogin = async () => {
     try {
@@ -99,19 +94,18 @@ const LoginPage = () => {
             access_type: 'offline',
             prompt: 'consent',
           },
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
-      });
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
 
       if (error) {
-        throw error;
+        throw error
       }
-      
     } catch (error: any) {
-      console.error("Error initiating Google Sign-In:", error);
-      setErrorText(error.message || "Error initiating Google Sign-In");
+      console.error('Error initiating Google Sign-In:', error)
+      setErrorText(error.message || 'Error initiating Google Sign-In')
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-green-200 flex">
@@ -135,19 +129,16 @@ const LoginPage = () => {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            <Button
             {errorText && (
               <div className="text-red-600 text-center text-sm">
                 {errorText}
               </div>
             )}
-            <Button 
+            <Button
               onClick={handleGoogleLogin}
               variant="outline"
               className="w-full h-12 text-base bg-[#FA5803] hover:bg-[#FF8B4E]"
               type="button">
-              type="button"
-            >
               <div className="flex items-center justify-center space-x-3">
                 <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
                   <path
@@ -185,5 +176,3 @@ const LoginPage = () => {
 }
 
 export default LoginPage
-
-export default LoginPage;
