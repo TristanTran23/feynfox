@@ -1,4 +1,35 @@
-import React from 'react';
+// Type definitions
+interface CredentialResponse {
+  credential: string;
+  select_by: string;
+}
+
+interface ImportMetaEnv {
+  readonly VITE_GOOGLE_CLIENT_ID: string
+  // Add other env vars here if needed
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
+}
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string;
+            callback: (response: CredentialResponse) => void;
+          }) => void;
+          prompt: () => void;
+        };
+      };
+    };
+  }
+}
+
+import React, { useEffect, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -8,12 +39,70 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
-
+import { Session } from '@supabase/supabase-js';
+import {
+  userExists,
+  updateUser,
+  insertNewUser,
+  signInUserWithToken,
+  checkAndUpdateUser,
+} from "../../../utils/auth";
+import { useUserStore } from '../../../state/stores/userStore';
+import { supabase } from '../../../utils/supabase';
 
 const LoginPage = () => {
-  const handleGoogleLogin = () => {
-    console.log('Google login attempted');
+  const [errorText, setErrorText] = useState("");
+
+  useEffect(() => {
+    // This effect can be removed if you're fully migrating to Supabase OAuth
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.initialize({
+        client_id: process.env.VITE_GOOGLE_CLIENT_ID || '',
+        callback: handleCredentialResponse,
+      });
+    }
+  }, []);
+
+  const handleCredentialResponse = async (response: CredentialResponse) => {
+    try {
+      const { data: user, error } = await signInUserWithToken(response.credential);
+      
+      if (error) {
+        console.error("Error signing in:", error.message);
+        setErrorText("Error signing in: " + error.message);
+        return;
+      }
+
+      if (user.session) {
+        await checkAndUpdateUser(user.session);
+      }
+    } catch (error: any) {
+      console.error("Unexpected error during sign-in:", error);
+      setErrorText("Unexpected error during sign-in: " + error.message);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+      
+    } catch (error: any) {
+      console.error("Error initiating Google Sign-In:", error);
+      setErrorText(error.message || "Error initiating Google Sign-In");
+    }
   };
 
   return (
@@ -38,12 +127,16 @@ const LoginPage = () => {
           </CardHeader>
           
           <CardContent className="space-y-6">
+            {errorText && (
+              <div className="text-red-600 text-center text-sm">
+                {errorText}
+              </div>
+            )}
             <Button 
               onClick={handleGoogleLogin}
               variant="outline"
               className="w-full h-12 text-base bg-[#FA5803] hover:bg-[#FF8B4E]"
               type="button"
-
             >
               <div className="flex items-center justify-center space-x-3">
                 <svg 
@@ -62,7 +155,6 @@ const LoginPage = () => {
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-4">
-
             <div className="text-center text-sm text-gray-600">
               <p>By continuing, you agree to our</p>
               <div className="space-x-2 mt-1">

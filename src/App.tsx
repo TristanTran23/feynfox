@@ -5,8 +5,10 @@ import LoginPage from './component/home/login'
 import ProfileHome from './component/profile/profileHome'
 import Results from './component/results/results'
 import Talking from './component/talking/talking'
+import AuthCallback from './component/auth/callback'
 
 const App = () => {
+
   return (
     <Router>
       <Routes>
@@ -14,6 +16,7 @@ const App = () => {
         <Route path="/profile" element={<ProfileHome />} />
         <Route path="/recording" element={<Talking />} />
         <Route path="/results" element={<Results />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
       </Routes>
     </Router>
   )
