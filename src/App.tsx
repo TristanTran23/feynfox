@@ -1,16 +1,19 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
+
+import LoginPage from './component/home/login'
 import ProfileHome from './component/profile/profileHome'
-import VoiceRecorder from './component/talking/talking'
-import Login from './component/home/login'
+import Results from './component/results/results'
+import Talking from './component/talking/talking'
 
 const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<LoginPage />} />
         <Route path="/profile" element={<ProfileHome />} />
-        <Route path="/home" element={<VoiceRecorder />} />
+        <Route path="/recording" element={<Talking />} />
+        <Route path="/results" element={<Results />} />
       </Routes>
     </Router>
   )
