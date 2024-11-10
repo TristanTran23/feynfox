@@ -45,10 +45,10 @@ const Results: React.FC = () => {
 
       {/* Navigation Buttons */}
       <div className="flex justify-center gap-4">
-        <Button onClick={() => (window.location.href = '/learning-page')}>
+        <Button onClick={() => (window.location.href = '/profile')}>
           Profile Page
         </Button>
-        <Button onClick={() => (window.location.href = '/try-page')}>
+        <Button onClick={() => (window.location.href = '/recording')}>
           Try Again
         </Button>
       </div>
