@@ -1,10 +1,18 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { generateRightAndWrong } from '@/utils/claude'
 
 const Results: React.FC = () => {
+  // State to store the results from generateRightAndWrong function
+  const [result, setResult] = useState<{
+    score: number
+    correct: string
+    wrong: string
+  } | null>(null)
+
   // Placeholder score for testing
-  const score = 0
+  const [score, setScore] = useState<number>(0)
 
   // Determine the color based on score
   const scoreColor =
@@ -13,6 +21,29 @@ const Results: React.FC = () => {
       : score >= 50
       ? 'text-yellow-600'
       : 'text-red-600'
+
+  // Fetch the comparison result on component mount
+  useEffect(() => {
+    const fetchComparison = async () => {
+      const comparisonResult = await generateRightAndWrong() // Call the function to get result from Claude API
+      console.log('comparisonResult: ', comparisonResult)
+
+      // Parse the response (assuming it's a JSON formatted string)
+      try {
+        const jsonResult = JSON.parse(comparisonResult)
+        setResult({
+          score: jsonResult.score,
+          correct: jsonResult.correct,
+          wrong: jsonResult.wrong,
+        })
+        setScore(jsonResult.score)
+      } catch (error) {
+        console.error('Error parsing JSON response:', error)
+      }
+    }
+
+    fetchComparison()
+  }, []) // Empty dependency array to run this effect once on mount
 
   return (
     <div className="p-8 max-w-3xl mx-auto bg-emerald-50 min-h-screen">
@@ -32,7 +63,7 @@ const Results: React.FC = () => {
           <h2 className="text-xl font-bold text-green-700 mb-4">
             What You Did Well
           </h2>
-          <p className="text-gray-700">placeholder text</p>
+          <p className="text-gray-700">{result?.correct || 'Loading...'}</p>
         </div>
 
         {/* Incorrect Explanation Box */}
@@ -40,7 +71,7 @@ const Results: React.FC = () => {
           <h2 className="text-xl font-bold text-red-700 mb-4">
             Areas to Focus On
           </h2>
-          <p className="text-gray-700">placeholder text</p>
+          <p className="text-gray-700">{result?.wrong || 'Loading...'}</p>
         </div>
       </div>
 
